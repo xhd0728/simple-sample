@@ -25,7 +25,6 @@ class App:
     - screen_width: 屏幕宽度
     - screen_height: 屏幕高度
     - menu_bar: 应用程序的菜单栏
-    - file_menu: 文件菜单
     - start_button: 开始按钮
     - save_button: 记录按钮
     - revoke_button: 撤销按钮
@@ -48,6 +47,7 @@ class App:
         - root: Tkinter根窗口
         """
         self.root = root
+        self.root.protocol('WM_DELETE_WINDOW', self.window_close_handle)
         user32 = ctypes.windll.user32
         self.screen_width = user32.GetSystemMetrics(0)
         self.screen_height = user32.GetSystemMetrics(1)
@@ -59,56 +59,63 @@ class App:
         self.menu_bar = tk.Menu(self.root)
         self.root.config(menu=self.menu_bar)
 
-        self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_command(label="导入名单", command=self.import_list)
         self.menu_bar.add_command(label="导出名单", command=self.export_list)
         self.menu_bar.add_command(label="重置所有", command=self.reset_list)
-
         self.menu_bar.add_command(label="关于", command=self.show_about)
 
-        self.start_button = ttk.Button(self.root,
-                                       text="开始",
-                                       command=self.start_scrolling)
-        self.start_button.place(x=150, y=400)
+        self.start_button = ttk.Button(
+            self.root,
+            text="开始",
+            command=self.start_scrolling)
+        self.start_button.place(x=100, y=400)
 
-        self.save_button = ttk.Button(self.root,
-                                      text="记录",
-                                      command=self.save_data)
-        self.save_button.place(x=250, y=400)
+        self.save_button = ttk.Button(
+            self.root,
+            text="记录",
+            command=self.save_data)
+        self.save_button.place(x=220, y=400)
 
-        self.revoke_button = ttk.Button(self.root,
-                                        text="撤销",
-                                        command=self.revoke_save)
-        self.revoke_button.place(x=350, y=400)
+        self.revoke_button = ttk.Button(
+            self.root,
+            text="撤销",
+            command=self.revoke_save)
+        self.revoke_button.place(x=340, y=400)
 
         self.is_scrolling = False
         self.teacher_data = pd.DataFrame(columns=["工号", "姓名"])
         self.teacher_num = 0
         self.export_data = pd.DataFrame(columns=["序号", "工号", "姓名"])
         self.export_num = 0
+        self.table_num = 0
 
-        self.config_label = tk.Label(self.root,
-                                     text=f"人员总数: {self.teacher_num} 已记录: {self.export_num} 剩余: {self.teacher_num-self.export_num}",
-                                     font=("Times New Roman", 16),
-                                     justify="center")
-        self.config_label.place(x=100, y=20)
+        self.config_label = tk.Label(
+            self.root,
+            text=f"文件数: {self.table_num}\t人员数: {self.teacher_num}\n记录数: {self.export_num}\t剩余数: {self.teacher_num-self.export_num}",
+            font=("Times New Roman", 12),
+            justify=tk.LEFT)
+        self.config_label.place(x=20, y=20)
 
-        self.label = tk.Label(self.root,
-                              text="",
-                              font=("Times New Roman", 36),
-                              justify="center")
+        self.label = tk.Label(
+            self.root,
+            text="",
+            font=("Times New Roman", 36),
+            justify=tk.CENTER)
         self.label.place(x=30, y=150)
 
-        self.result = tk.Text(self.root,
-                              height=22,
-                              width=24,
-                              font=("Times New Roman", 12))
+        self.result = tk.Text(
+            self.root,
+            height=22,
+            width=24,
+            font=("Times New Roman", 12))
+        self.result.configure(state=tk.NORMAL)
         self.yscrollbar = Scrollbar(self.root)
         self.yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.result.place(x=550, y=0)
         self.yscrollbar.config(command=self.result.yview)
         self.result.config(yscrollcommand=self.yscrollbar.set)
         self.result.insert(tk.END, "———已选记录 ———\n")
+        self.result.configure(state=tk.DISABLED)
 
     def start_scrolling(self):
         """
@@ -137,7 +144,7 @@ class App:
         if len(teacher_id) == 9:
             teacher_id = '0'+teacher_id
         self.label.config(text=f'{teacher_id} {teacher_name}')
-        self.root.after(100, self.scroll_names)
+        self.root.after(50, self.scroll_names)
 
     def save_data(self):
         """
@@ -158,9 +165,11 @@ class App:
             return
         self.export_data.loc[len(self.export_data)] = [self.export_num+1] + row
         self.export_num += 1
+        self.result.configure(state=tk.NORMAL)
         self.result.insert(tk.END, f'{self.export_num} {row[0]} {row[1]}\n')
         self.result.focus_force()
         self.result.see(tk.END)
+        self.result.configure(state=tk.DISABLED)
         self.update_config()
 
     def revoke_save(self):
@@ -170,6 +179,7 @@ class App:
         if not self.export_num:
             messagebox.showwarning("错误", "无历史记录")
             return
+        self.result.configure(state=tk.NORMAL)
         totalLen = len(self.result.get(1.0, tk.END).split("\n"))
         delstart = f"{totalLen-2}.0"
         delend = f"{totalLen}.0"
@@ -178,6 +188,7 @@ class App:
         self.export_num -= 1
         self.result.focus_force()
         self.result.insert(tk.END, '\n')
+        self.result.configure(state=tk.DISABLED)
         self.update_config()
 
     def import_list(self):
@@ -192,8 +203,9 @@ class App:
                 if not self.valid_data(data):
                     messagebox.showwarning("错误", "无法解析Excel文件\n请选择正确的Excel文件")
                     return
-                self.teacher_data = data
-                self.teacher_num = len(data)
+                self.teacher_data = pd.concat([self.teacher_data, data])
+                self.teacher_num += len(data)
+                self.table_num += 1
                 self.update_config()
                 messagebox.showinfo("上传成功",
                                     f"成功导入{self.teacher_num}条数据")
@@ -204,13 +216,18 @@ class App:
         """
         重置人员名单和记录信息
         """
+        if not messagebox.askyesno("提示", "确定要重置吗\n该选项会清空全部的数据"):
+            return
         self.teacher_data = pd.DataFrame(columns=["工号", "姓名"])
         self.export_data = pd.DataFrame(columns=["序号", "工号", "姓名"])
         self.teacher_num = 0
         self.export_num = 0
+        self.table_num = 0
         self.label.config(text="")
-        self.result.delete('1.0', 'end')
+        self.result.configure(state=tk.NORMAL)
+        self.result.delete('1.0', tk.END)
         self.result.insert(tk.END, "———已选记录 ———\n")
+        self.result.configure(state=tk.DISABLED)
         self.update_config()
         messagebox.showinfo("成功", "重置成功")
 
@@ -244,8 +261,8 @@ class App:
                  "@Author: xhd0728\n"
                  "@Email: xhd0728@hrbeu.edu.cn",
             font=("Times New Roman", 12),
-            anchor="w",
-            justify="left")
+            anchor=tk.W,
+            justify=tk.LEFT)
         label.pack(pady=20, padx=40)
 
     def get_random_row(self) -> pd.DataFrame:
@@ -259,7 +276,7 @@ class App:
         更新配置信息
         """
         self.config_label.config(
-            text=f"人员总数: {self.teacher_num} 已记录: {self.export_num} 剩余: {self.teacher_num-self.export_num}")
+            text=f"文件数: {self.table_num}\t人员数: {self.teacher_num}\n记录数: {self.export_num}\t剩余数: {self.teacher_num-self.export_num}")
 
     def valid_data(self, df) -> bool:
         """
@@ -268,6 +285,13 @@ class App:
         if '工号' in df.columns and '姓名' in df.columns:
             return True
         return False
+
+    def window_close_handle(self):
+        """
+        窗口关闭监听函数
+        """
+        if messagebox.askyesno("提示", "确认关闭软件吗\n将清空全部信息"):
+            self.root.destroy()
 
 
 if __name__ == "__main__":
