@@ -15,6 +15,14 @@ from tkinter import ttk, filedialog, messagebox, Scrollbar
 import pandas as pd
 import ctypes
 
+# 滚动时延/ms
+SCROLL_INTERVAL_TIME = 50
+# 教师工号长度
+TEACHER_ID_LENGTH = 10
+# 主窗口宽高/px
+MAIN_WINDOW_WIDTH = 800
+MAIN_WINDOW_HEIGHT = 500
+
 
 class App:
     """
@@ -51,9 +59,10 @@ class App:
         user32 = ctypes.windll.user32
         self.screen_width = user32.GetSystemMetrics(0)
         self.screen_height = user32.GetSystemMetrics(1)
-        pad_width = round((self.screen_width-800)/2)
-        pad_height = round((self.screen_height-480)/2)
-        self.root.geometry(f"800x500+{pad_width}+{pad_height}")
+        pad_width = round((self.screen_width-MAIN_WINDOW_WIDTH)/2)
+        pad_height = round((self.screen_height-MAIN_WINDOW_HEIGHT)/2)
+        self.root.geometry(
+            f"{MAIN_WINDOW_WIDTH}x{MAIN_WINDOW_HEIGHT}+{pad_width}+{pad_height}")
         self.root.title("Random")
 
         self.menu_bar = tk.Menu(self.root)
@@ -99,9 +108,11 @@ class App:
         self.label = tk.Label(
             self.root,
             text="",
-            font=("Times New Roman", 36),
-            justify=tk.CENTER)
-        self.label.place(x=30, y=150)
+            font=("Times New Roman", 32),
+            justify=tk.CENTER,
+            width=17,
+            height=2)
+        self.label.place(x=20, y=150)
 
         self.result = tk.Text(
             self.root,
@@ -141,10 +152,11 @@ class App:
         row = self.get_random_row()
         teacher_id = str(row["工号"].values[0])
         teacher_name = str(row["姓名"].values[0])
-        if len(teacher_id) == 9:
-            teacher_id = '0'+teacher_id
+        if len(teacher_id) < TEACHER_ID_LENGTH:
+            for i in range(TEACHER_ID_LENGTH-len(teacher_id)):
+                teacher_id = '0'+teacher_id
         self.label.config(text=f'{teacher_id} {teacher_name}')
-        self.root.after(50, self.scroll_names)
+        self.root.after(SCROLL_INTERVAL_TIME, self.scroll_names)
 
     def save_data(self):
         """
@@ -153,7 +165,7 @@ class App:
         if self.is_scrolling:
             self.is_scrolling = False
             self.start_button.config(text="开始")
-        if not self.label["text"]:
+        if not self.label["text"] or not self.teacher_num:
             messagebox.showwarning("错误", "未选择人员")
             return
         row = str(self.label["text"]).split()
@@ -180,7 +192,7 @@ class App:
             messagebox.showwarning("错误", "无历史记录")
             return
         self.result.configure(state=tk.NORMAL)
-        totalLen = len(self.result.get(1.0, tk.END).split("\n"))
+        totalLen = len(self.result.get('1.0', tk.END).split("\n"))
         delstart = f"{totalLen-2}.0"
         delend = f"{totalLen}.0"
         self.result.delete(delstart, delend)
