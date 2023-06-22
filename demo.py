@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
+from tkinter import Scrollbar
 
 import pandas as pd
 import ctypes
@@ -30,7 +31,7 @@ class App:
         self.start_button = ttk.Button(self.root,
                                        text="开始",
                                        command=self.start_scrolling)
-        self.start_button.place(x=200, y=350)
+        self.start_button.place(x=150, y=350)
 
         self.stop_button = ttk.Button(self.root,
                                       text="停止",
@@ -40,12 +41,12 @@ class App:
         self.save_button = ttk.Button(self.root,
                                       text="记录",
                                       command=self.save_data)
-        self.save_button.place(x=400, y=350)
+        self.save_button.place(x=150, y=400)
 
         self.reset_button = ttk.Button(self.root,
                                        text="复位",
                                        command=self.reset_list)
-        self.reset_button.place(x=500, y=350)
+        self.reset_button.place(x=300, y=400)
 
         self.is_scrolling = False
         self.teacher_data = pd.DataFrame(columns=["工号", "姓名"])
@@ -57,19 +58,23 @@ class App:
                                      text=f"人员总数: {self.teacher_num}, 已记录: {self.export_num}",
                                      font=("Times New Roman", 16),
                                      justify="center")
-        self.config_lable.place(x=20, y=20)
+        self.config_lable.place(x=150, y=20)
 
         self.label = tk.Label(self.root,
                               text="",
-                              font=("Times New Roman", 42),
+                              font=("Times New Roman", 36),
                               justify="center")
-        self.label.place(x=100, y=150)
+        self.label.place(x=30, y=150)
 
         self.result = tk.Text(self.root,
-                              height=4,
-                              width=40,
+                              height=22,
+                              width=24,
                               font=("Times New Roman", 12))
-        self.result.place(x=200, y=400)
+        self.yscrollbar = Scrollbar(self.root)
+        self.yscrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.result.place(x=550, y=0)
+        self.yscrollbar.config(command=self.result.yview)
+        self.result.config(yscrollcommand=self.yscrollbar.set)
 
     def start_scrolling(self):
         if self.teacher_data.empty:
@@ -102,8 +107,10 @@ class App:
             return
         row = self.label["text"].split()
         self.export_data.loc[len(self.export_data)] = row
-        self.result.insert('end', f'{row[0]} {row[1]}\n')
         self.export_num += 1
+        self.result.insert(tk.END, f'{self.export_num} {row[0]} {row[1]}\n')
+        self.result.focus_force()
+        self.result.see(tk.END)
         self.update_config()
 
     def import_list(self):
