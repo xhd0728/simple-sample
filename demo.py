@@ -102,7 +102,10 @@ class App:
         if not self.label["text"]:
             messagebox.showwarning("错误", "未选择人员")
             return
-        row = self.label["text"].split()
+        row = str(self.label["text"]).split()
+        if len(row) < 2:
+            messagebox.showwarning("错误", "添加失败")
+            return
         if row[0] in self.export_data.values:
             messagebox.showwarning("错误", "人员已记录")
             return
