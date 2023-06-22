@@ -1,5 +1,5 @@
 """
-模块名称: demo.py
+模块名称: demo_linux.py
 
 功能：
 - 实现一个随机选择人员的程序
@@ -13,7 +13,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, Scrollbar
 import pandas as pd
-import ctypes
+import subprocess
 
 # 滚动时延/ms
 SCROLL_INTERVAL_TIME = 50
@@ -22,6 +22,13 @@ TEACHER_ID_LENGTH = 10
 # 主窗口宽高/px
 MAIN_WINDOW_WIDTH = 800
 MAIN_WINDOW_HEIGHT = 500
+
+
+def get_screen_resolution():
+    output = subprocess.Popen('xrandr | grep "\*" | cut -d" " -f4',
+                              shell=True, stdout=subprocess.PIPE).communicate()[0]
+    resolution = output.split()[0].split(b'x')
+    return {'width': resolution[0], 'height': resolution[1]}
 
 
 class App:
@@ -56,9 +63,9 @@ class App:
         """
         self.root = root
         self.root.protocol('WM_DELETE_WINDOW', self.window_close_handle)
-        user32 = ctypes.windll.user32
-        self.screen_width = user32.GetSystemMetrics(0)
-        self.screen_height = user32.GetSystemMetrics(1)
+        screen_info = get_screen_resolution()
+        self.screen_width = int(screen_info.get('width'))
+        self.screen_height = int(screen_info.get('height'))
         pad_width = round((self.screen_width-MAIN_WINDOW_WIDTH)/2)
         pad_height = round((self.screen_height-MAIN_WINDOW_HEIGHT)/2)
         self.root.geometry(
