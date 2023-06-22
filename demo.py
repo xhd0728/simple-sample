@@ -1,14 +1,11 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import messagebox
-from tkinter import Scrollbar
-
+from tkinter import ttk, filedialog, messagebox, Scrollbar
 import pandas as pd
 import ctypes
 
 
 class App:
+
     def __init__(self, root):
         self.root = root
         user32 = ctypes.windll.user32
@@ -51,7 +48,7 @@ class App:
         self.is_scrolling = False
         self.teacher_data = pd.DataFrame(columns=["工号", "姓名"])
         self.teacher_num = 0
-        self.export_data = pd.DataFrame(columns=["工号", "姓名"])
+        self.export_data = pd.DataFrame(columns=["序号", "工号", "姓名"])
         self.export_num = 0
 
         self.config_lable = tk.Label(self.root,
@@ -92,8 +89,8 @@ class App:
         if not self.is_scrolling:
             return
         row = self.get_random_row()
-        teacher_id = str(row.iat[0, 1])
-        teacher_name = str(row.iat[0, 2])
+        teacher_id = str(row["工号"].values[0])
+        teacher_name = str(row["姓名"].values[0])
         if len(teacher_id) == 9:
             teacher_id = '0'+teacher_id
         self.label.config(text=f'{teacher_id} {teacher_name}')
@@ -106,7 +103,10 @@ class App:
             messagebox.showwarning("错误", "未选择人员")
             return
         row = self.label["text"].split()
-        self.export_data.loc[len(self.export_data)] = row
+        if row[0] in self.export_data.values:
+            messagebox.showwarning("错误", "人员已记录")
+            return
+        self.export_data.loc[len(self.export_data)] = [self.export_num+1] + row
         self.export_num += 1
         self.result.insert(tk.END, f'{self.export_num} {row[0]} {row[1]}\n')
         self.result.focus_force()
