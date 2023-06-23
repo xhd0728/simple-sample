@@ -6,7 +6,7 @@
 - 提供导入名单、导出名单、重置名单等功能
 
 作者: xhd0728
-日期: 2023年6月22日
+日期: 2023年6月23日
 网站: https://github.com/xhd0728/simple-sample
 """
 
@@ -263,19 +263,25 @@ class App:
         """
         about_window = tk.Toplevel(self.root)
         about_window.title("关于")
-        pad_width = round((self.screen_width-350)/2)
-        pad_height = round((self.screen_height-150)/2)
-        about_window.geometry(f"350x150+{pad_width}+{pad_height}")
+        pad_width = round((self.screen_width-450)/2)
+        pad_height = round((self.screen_height-250)/2)
+        about_window.geometry(f"450x250+{pad_width}+{pad_height}")
 
         label = tk.Label(
             about_window,
-            text="@Project: Random\n"
-                 "@Author: xhd0728\n"
-                 "@Email: xhd0728@hrbeu.edu.cn",
+            text="# 更新日志 2023.06.23\n"
+                 "1. 优化按钮布局, 去除无用按钮, 增加撤销功能\n"
+                 "2. 修复重置后记录功能失效\n"
+                 "3. 支持多表导入, 添加人员数量显示\n"
+                 "4. 重置和关闭窗口时增加提示, 避免误操作\n"
+                 "\n"
+                 "# 关于\n"
+                 "- 作者:\tHaidong Xin\n"
+                 "- Email:\txhd0728@hrbeu.edu.cn",
             font=("Times New Roman", 12),
             anchor=tk.W,
             justify=tk.LEFT)
-        label.pack(pady=20, padx=40)
+        label.pack(pady=20, padx=20)
 
     def get_random_row(self) -> pd.DataFrame:
         """
