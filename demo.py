@@ -125,7 +125,7 @@ class App:
         self.result.place(x=550, y=0)
         self.yscrollbar.config(command=self.result.yview)
         self.result.config(yscrollcommand=self.yscrollbar.set)
-        self.result.insert(tk.END, "———已选记录 ———\n")
+        self.result.insert(tk.END, "——— 已选记录 ———\n")
         self.result.configure(state=tk.DISABLED)
 
     def start_scrolling(self):
@@ -133,7 +133,7 @@ class App:
         开始/停止滚动选择人员
         """
         if self.teacher_data.empty:
-            messagebox.showwarning("错误", "请先导入人员名单")
+            messagebox.showwarning("错误", "请先[导入名单]")
             return
         if self.is_scrolling:
             self.is_scrolling = False
@@ -164,16 +164,19 @@ class App:
         """
         if self.is_scrolling:
             self.is_scrolling = False
-            self.start_button.config(text="开始")
+            messagebox.showinfo("提示", "请[停止]后记录")
+            self.is_scrolling = True
+            self.scroll_names()
+            return
         if not self.label["text"] or not self.teacher_num:
             messagebox.showwarning("错误", "未选择人员")
             return
         row = str(self.label["text"]).split()
         if len(row) < 2:
-            messagebox.showwarning("错误", "添加失败")
+            messagebox.showwarning("错误", "数据不合法")
             return
         if row[0] in self.export_data.values:
-            messagebox.showwarning("错误", "人员已记录")
+            messagebox.showwarning("错误", "人员已[记录]")
             return
         self.export_data.loc[len(self.export_data)] = [self.export_num+1] + row
         self.export_num += 1
@@ -189,7 +192,7 @@ class App:
         撤销最近一次记录
         """
         if not self.export_num:
-            messagebox.showwarning("错误", "无历史记录")
+            messagebox.showwarning("错误", "无历史[记录]")
             return
         self.result.configure(state=tk.NORMAL)
         totalLen = len(self.result.get('1.0', tk.END).split("\n"))
@@ -220,7 +223,7 @@ class App:
                 self.table_num += 1
                 self.update_config()
                 messagebox.showinfo("上传成功",
-                                    f"成功导入{self.teacher_num}条数据")
+                                    f"[导入名单]成功\n成功导入{self.teacher_num}条数据")
             except pd.errors.ParserError:
                 messagebox.showwarning("错误", "无法解析文件\n请选择正确的Excel文件")
 
@@ -228,7 +231,9 @@ class App:
         """
         重置人员名单和记录信息
         """
-        if not messagebox.askyesno("提示", "确定要重置吗\n该选项会清空全部的数据"):
+        if not messagebox.askyesno("提示",
+                                   "确定要[重置所有]吗?\n"
+                                   "将清空: [导入名单], [导出名单], [已选记录]"):
             return
         self.teacher_data = pd.DataFrame(columns=["工号", "姓名"])
         self.export_data = pd.DataFrame(columns=["序号", "工号", "姓名"])
@@ -238,24 +243,24 @@ class App:
         self.label.config(text="")
         self.result.configure(state=tk.NORMAL)
         self.result.delete('1.0', tk.END)
-        self.result.insert(tk.END, "———已选记录 ———\n")
+        self.result.insert(tk.END, "——— 已选记录 ———\n")
         self.result.configure(state=tk.DISABLED)
         self.update_config()
-        messagebox.showinfo("成功", "重置成功")
+        messagebox.showinfo("成功", "[重置所有]成功")
 
     def export_list(self):
         """
         导出已记录的人员信息
         """
         if self.export_data.empty:
-            messagebox.showwarning("错误", "名单为空")
+            messagebox.showwarning("错误", "[导出名单]为空")
             return
         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx",
                                                  filetypes=[("Excel Files", "*.xlsx")])
         if file_path:
             self.export_data.to_excel(file_path, index=False)
             messagebox.showinfo("保存成功",
-                                f"成功导出{self.export_num}条数据\n路径: {file_path}")
+                                f"[导出名单]成功\n成功导出{self.export_num}条数据\n路径: {file_path}")
 
     def show_about(self):
         """
@@ -308,7 +313,9 @@ class App:
         """
         窗口关闭监听函数
         """
-        if messagebox.askyesno("提示", "确认关闭软件吗\n将清空全部信息"):
+        if messagebox.askyesno("提示",
+                               "确认关闭软件吗?\n"
+                               "将清空: [导入名单], [导出名单], [已选记录]"):
             self.root.destroy()
 
 
