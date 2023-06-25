@@ -100,7 +100,10 @@ class App:
 
         self.config_label = tk.Label(
             self.root,
-            text=f"文件数: {self.table_num}\t人员数: {self.teacher_num}\n记录数: {self.export_num}\t剩余数: {self.teacher_num-self.export_num}",
+            text=f"文件数: {self.table_num}\t"
+                 f"人员数: {self.teacher_num}\n"
+                 f"记录数: {self.export_num}\t"
+                 f"剩余数: {self.teacher_num-self.export_num}",
             font=("Times New Roman", 12),
             justify=tk.LEFT)
         self.config_label.place(x=20, y=20)
@@ -178,13 +181,19 @@ class App:
         if row[0] in self.export_data.values:
             messagebox.showwarning("错误", "人员已[记录]")
             return
-        self.export_data.loc[len(self.export_data)] = [self.export_num+1] + row
+        self.export_data.loc[len(self.export_data) +
+                             1] = [self.export_num+1] + row
         self.export_num += 1
         self.result.configure(state=tk.NORMAL)
         self.result.insert(tk.END, f'{self.export_num} {row[0]} {row[1]}\n')
         self.result.focus_force()
         self.result.see(tk.END)
         self.result.configure(state=tk.DISABLED)
+
+        # 删除原表中已选中的人员
+        index = self.teacher_data[self.teacher_data['工号'] == row[0]].index
+        self.teacher_data = self.teacher_data.drop(index=index)
+
         self.update_config()
 
     def revoke_save(self):
@@ -195,7 +204,10 @@ class App:
             messagebox.showwarning("错误", "无历史[记录]")
             return
         self.result.configure(state=tk.NORMAL)
-        totalLen = len(self.result.get('1.0', tk.END).split("\n"))
+        commit_list = self.result.get('1.0', tk.END).split("\n")
+        commit_row = commit_list[-3].split()
+        self.teacher_data.loc[len(self.teacher_data)+1] = commit_row[1:]
+        totalLen = len(commit_list)
         delstart = f"{totalLen-2}.0"
         delend = f"{totalLen}.0"
         self.result.delete(delstart, delend)
@@ -218,7 +230,10 @@ class App:
                 if not self.valid_data(data):
                     messagebox.showwarning("错误", "无法解析Excel文件\n请选择正确的Excel文件")
                     return
-                self.teacher_data = pd.concat([self.teacher_data, data])
+                data['工号'] = data['工号'].astype(str)
+                data['工号'] = data['工号'].str.zfill(10)
+                self.teacher_data = pd.concat(
+                    [self.teacher_data, data], join='inner')
                 self.teacher_num += len(data)
                 self.table_num += 1
                 self.update_config()
@@ -274,7 +289,7 @@ class App:
 
         label = tk.Label(
             about_window,
-            text="# 更新日志 2023.06.23\n"
+            text="# 更新日志 2023.06.25\n"
                  "1. 优化按钮布局, 去除无用按钮, 增加撤销功能\n"
                  "2. 修复重置后记录功能失效\n"
                  "3. 支持多表导入, 添加人员数量显示\n"
@@ -299,7 +314,10 @@ class App:
         更新配置信息
         """
         self.config_label.config(
-            text=f"文件数: {self.table_num}\t人员数: {self.teacher_num}\n记录数: {self.export_num}\t剩余数: {self.teacher_num-self.export_num}")
+            text=f"文件数: {self.table_num}\t"
+                 f"人员数: {self.teacher_num}\n"
+                 f"记录数: {self.export_num}\t"
+                 f"剩余数: {self.teacher_num-self.export_num}")
 
     def valid_data(self, df) -> bool:
         """
