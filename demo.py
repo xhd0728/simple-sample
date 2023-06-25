@@ -181,8 +181,8 @@ class App:
         if row[0] in self.export_data.values:
             messagebox.showwarning("错误", "人员已[记录]")
             return
-        self.export_data.loc[len(self.export_data) +
-                             1] = [self.export_num+1] + row
+        self.export_data = self.export_data.reset_index(drop=True)
+        self.export_data.loc[len(self.export_data)] = [self.export_num+1] + row
         self.export_num += 1
         self.result.configure(state=tk.NORMAL)
         self.result.insert(tk.END, f'{self.export_num} {row[0]} {row[1]}\n')
@@ -206,7 +206,8 @@ class App:
         self.result.configure(state=tk.NORMAL)
         commit_list = self.result.get('1.0', tk.END).split("\n")
         commit_row = commit_list[-3].split()
-        self.teacher_data.loc[len(self.teacher_data)+1] = commit_row[1:]
+        self.teacher_data = self.teacher_data.reset_index(drop=True)
+        self.teacher_data.loc[len(self.teacher_data)] = commit_row[1:]
         totalLen = len(commit_list)
         delstart = f"{totalLen-2}.0"
         delend = f"{totalLen}.0"
